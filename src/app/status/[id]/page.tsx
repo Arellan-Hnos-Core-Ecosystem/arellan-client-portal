@@ -124,7 +124,7 @@ export default async function StatusPage({ params }: { params: { id: string } })
                   </p>
                 </div>
               )}
-              {currentStatus === "DELIVERED" && order.statusHistory.length > 0 && (
+              {(order.statusHistory?.length ?? 0) > 0 && (
                 <div className="mt-3 border-t border-gray-200 pt-3">
                   <p className="text-xs text-green-600 font-medium">
                     Vehículo entregado el{" "}
