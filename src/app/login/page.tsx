@@ -3,9 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button, Input, Card, CardHeader, CardContent, CardFooter, Alert, Spinner } from "@arellan-hnos-core-ecosystem/ui"
-import axios from "axios"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1"
+import { loginClient } from "@/lib/api"
 
 export default function ClientLoginPage() {
   const router = useRouter()
@@ -20,7 +18,7 @@ export default function ClientLoginPage() {
     setError("")
 
     try {
-      const { data } = await axios.post(`${API_URL}/auth/login`, { email, password })
+      const data = await loginClient(email, password)
 
       if (data.user.role !== "CLIENT") {
         setError("Este portal es solo para clientes. Los empleados deben usar el panel de administración.")
@@ -33,7 +31,7 @@ export default function ClientLoginPage() {
 
       router.push("/dashboard")
     } catch (err: any) {
-      const msg = err.response?.data?.message || "Error al iniciar sesión. Verifique sus credenciales."
+      const msg = err.message || "Error al iniciar sesión. Verifique sus credenciales."
       setError(msg)
     } finally {
       setLoading(false)
@@ -56,12 +54,12 @@ export default function ClientLoginPage() {
             {error && <Alert variant="error" title="Error" description={error} className="mb-4" />}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Correo electrónico</label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="cliente@email.com" required />
+                <label htmlFor="client-email" className="block text-sm font-medium text-gray-700 mb-1">Correo electronico</label>
+                <Input id="client-email" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="cliente@email.com" required />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
+                <label htmlFor="client-password" className="block text-sm font-medium text-gray-700 mb-1">Contrasena</label>
+                <Input id="client-password" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="********" required />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? <Spinner size="sm" /> : "Ingresar"}

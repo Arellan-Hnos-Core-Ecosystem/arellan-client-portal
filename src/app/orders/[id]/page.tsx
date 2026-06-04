@@ -4,9 +4,8 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Card, CardHeader, CardContent, Button, Spinner, EmptyState, OrderStatusBadge, Container } from "@arellan-hnos-core-ecosystem/ui"
 import TimelineProgress from "@/components/TimelineProgress"
+import { getClientOrderDetail } from "@/lib/api"
 import type { OrderStatus, StatusHistoryEntry } from "@/types"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1"
 
 const STATUS_LABEL: Record<string, string> = {
   RECEIVED: "Recibido", IN_DIAGNOSIS: "En Diagnóstico", BUDGETED: "Cotizado",
@@ -21,27 +20,16 @@ export default function ClientOrderDetailPage() {
   const [vehicle, setVehicle] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
-  const getToken = () => {
-    if (typeof window === "undefined") return null
-    return localStorage.getItem("arellan-client-token")
-  }
-
   useEffect(() => {
-    const token = getToken()
+    const token = localStorage.getItem("arellan-client-token")
     if (!token || !params.id) { router.push("/login"); return }
 
-    fetch(`${API_URL}/orders/${params.id}`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
+    getClientOrderDetail(params.id)
       .then(data => {
-        if (data.vehicle) {
-          setVehicle(data.vehicle)
-          setOrder(data)
-        } else {
-          setOrder(data)
-          setVehicle(data.vehicle || {})
-        }
+        setOrder(data)
+        setVehicle(data.vehicle || {})
       })
-      .catch(() => {})
+      .catch((err) => { console.error("[client-portal] Error:", err.message) })
       .finally(() => setLoading(false))
   }, [params.id])
 

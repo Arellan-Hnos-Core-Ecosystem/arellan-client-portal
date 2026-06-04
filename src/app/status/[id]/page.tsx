@@ -1,4 +1,7 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { getOrderStatus } from "@/lib/api";
 import { Card, CardHeader, CardContent, OrderStatusBadge } from "@arellan-hnos-core-ecosystem/ui";
 import TimelineProgress from "@/components/TimelineProgress";
@@ -16,42 +19,26 @@ const STATUS_LABEL: Record<OrderStatus, string> = {
   CANCELLED: "Cancelado",
 };
 
-async function fetchOrderDetail(id: string): Promise<OrderDetailResponse | null> {
-  try {
-    const data = await getOrderStatus(id);
-    return data;
-  } catch {
-    return null;
+export default function StatusPage() {
+  const params = useParams<{ id: string }>();
+  const [data, setData] = useState<OrderDetailResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!params.id) return;
+    getOrderStatus(params.id)
+      .then(setData)
+      .catch(() => setData(null))
+      .finally(() => setLoading(false));
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-12 text-center">
+        <p className="text-gray-500">Cargando...</p>
+      </div>
+    );
   }
-}
-
-export async function generateMetadata({
-  params,
-}: {
-  params: { id: string };
-}): Promise<Metadata> {
-  const data = await fetchOrderDetail(params.id);
-
-  if (!data) {
-    return {
-      title: "Orden no encontrada",
-      description: "La orden de trabajo solicitada no existe o no está disponible.",
-    };
-  }
-
-  const { vehicle, order } = data;
-  return {
-    title: `OT #${order.orderNumber} — ${vehicle.plate}`,
-    description: `Estado actual: ${STATUS_LABEL[order.status]}. Vehículo ${vehicle.brand} ${vehicle.model}. ${order.description}`,
-    openGraph: {
-      title: `OT #${order.orderNumber} — ${vehicle.plate} | Clínica Automotriz Arellan Hnos`,
-      description: `Estado: ${STATUS_LABEL[order.status]}. ${vehicle.brand} ${vehicle.model}`,
-    },
-  };
-}
-
-export default async function StatusPage({ params }: { params: { id: string } }) {
-  const data = await fetchOrderDetail(params.id);
 
   if (!data) {
     return (

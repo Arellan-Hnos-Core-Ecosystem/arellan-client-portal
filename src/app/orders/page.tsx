@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardHeader, CardContent, CardFooter, Button, Spinner, EmptyState, OrderStatusBadge, Container } from "@arellan-hnos-core-ecosystem/ui"
+import { getClientOrders } from "@/lib/api"
 import type { OrderStatus } from "@/types"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1"
 
 interface OrderInfo {
   id: string; number: string; status: OrderStatus; description: string; vehiclePlate: string; totalCost?: string; createdAt: string
@@ -16,19 +15,13 @@ export default function ClientOrdersPage() {
   const [orders, setOrders] = useState<OrderInfo[]>([])
   const [loading, setLoading] = useState(true)
 
-  const getToken = () => {
-    if (typeof window === "undefined") return null
-    return localStorage.getItem("arellan-client-token")
-  }
-
   useEffect(() => {
-    const token = getToken()
+    const token = localStorage.getItem("arellan-client-token")
     if (!token) { router.push("/login"); return }
 
-    fetch(`${API_URL}/orders?limit=50`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
+    getClientOrders(50)
       .then(data => setOrders(Array.isArray(data) ? data : data.data || []))
-      .catch(() => {})
+      .catch((err) => { console.error("[client-portal] Error:", err.message) })
       .finally(() => setLoading(false))
   }, [])
 

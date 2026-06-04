@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLookupByPlate, useLookupByOT } from "@/hooks/use-lookup";
 import { Card, CardHeader, CardContent, Spinner, EmptyState, OrderStatusBadge } from "@arellan-hnos-core-ecosystem/ui";
@@ -19,6 +20,14 @@ const STATUS_LABEL: Record<OrderStatus, string> = {
 };
 
 export default function LookupPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center py-12"><Spinner size="lg" /></div>}>
+      <LookupContent />
+    </Suspense>
+  );
+}
+
+function LookupContent() {
   const searchParams = useSearchParams();
   const plate = searchParams.get("plate") ?? "";
   const ot = searchParams.get("ot") ?? "";

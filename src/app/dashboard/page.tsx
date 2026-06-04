@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardHeader, CardContent, Button, Spinner, EmptyState, OrderStatusBadge, Container } from "@arellan-hnos-core-ecosystem/ui"
+import { getClientVehicles, getClientOrders } from "@/lib/api"
 import type { OrderStatus } from "@/types"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1"
 
 interface Vehicle {
   id: string; plate: string; brand: string; model: string; year: number; color: string
@@ -20,33 +19,24 @@ export default function ClientDashboardPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [orders, setOrders] = useState<OrderInfo[]>([])
   const [loading, setLoading] = useState(true)
-
-  const getToken = () => {
-    if (typeof window === "undefined") return null
-    return localStorage.getItem("arellan-client-token")
-  }
+  const [error, setError] = useState("")
 
   useEffect(() => {
     const stored = localStorage.getItem("arellan-client-user")
-    if (!stored || !getToken()) {
+    const token = localStorage.getItem("arellan-client-token")
+    if (!stored || !token) {
       router.push("/login")
       return
     }
     setUser(JSON.parse(stored))
 
-    const token = getToken()
-    const headers = { Authorization: `Bearer ${token}` }
-
-    Promise.all([
-      fetch(`${API_URL}/vehicles`, { headers }).then(r => r.json()),
-      fetch(`${API_URL}/orders?limit=10`, { headers }).then(r => r.json()),
-    ])
-    .then(([vehData, ordData]) => {
-      setVehicles(Array.isArray(vehData) ? vehData : vehData.data || [])
-      setOrders(Array.isArray(ordData) ? ordData : ordData.data || [])
-    })
-    .catch(() => {})
-    .finally(() => setLoading(false))
+    Promise.all([getClientVehicles(), getClientOrders(10)])
+      .then(([vehData, ordData]) => {
+        setVehicles(Array.isArray(vehData) ? vehData : vehData.data || [])
+        setOrders(Array.isArray(ordData) ? ordData : ordData.data || [])
+      })
+      .catch((err) => { console.error("[client-portal] Error:", err.message); setError(err.message) })
+      .finally(() => setLoading(false))
   }, [])
 
   const handleLogout = () => {
