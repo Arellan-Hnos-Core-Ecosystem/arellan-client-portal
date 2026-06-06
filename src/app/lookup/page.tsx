@@ -31,12 +31,11 @@ function LookupContent() {
   const searchParams = useSearchParams();
   const plate = searchParams.get("plate") ?? "";
   const ot = searchParams.get("ot") ?? "";
+  const searchTerm = plate || ot;
 
   const plateQuery = useLookupByPlate(plate);
   const otQuery = useLookupByOT(ot);
-
   const query = plate ? plateQuery : otQuery;
-  const searchTerm = plate || ot;
 
   if (!searchTerm) {
     return (
@@ -62,17 +61,46 @@ function LookupContent() {
     return (
       <div className="mx-auto max-w-2xl px-4 py-12">
         <EmptyState
+          title="Error de busqueda"
+          description="Ocurrio un error al consultar. Verifica tu conexion e intenta nuevamente."
+          action={<Link href="/" className="text-sm font-medium text-brand-primary hover:underline">Volver al inicio</Link>}
+        />
+      </div>
+    );
+  }
+
+  const data = query.data;
+
+  if (!data?.found) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-12">
+        <EmptyState
           title="No encontrado"
-          description={`No se encontraron resultados para "${searchTerm}". Verifica el dato e intenta nuevamente.`}
+          description={data?.message ?? `No se encontraron resultados para "${searchTerm}". Verifica el dato e intenta nuevamente.`}
           action={<Link href="/" className="text-sm font-medium text-brand-primary hover:underline">Nueva busqueda</Link>}
         />
       </div>
     );
   }
 
-  const { vehicle } = query.data;
+  const vehicle = data.vehicle;
+  const order = data.order ?? null;
 
-  if (!vehicle.currentOrder) {
+  if (!vehicle || (!order && !data.activeOrder)) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-12">
+        <EmptyState
+          title="Sin ordenes activas"
+          description={vehicle
+            ? `El vehiculo ${vehicle.brand} ${vehicle.model} (${vehicle.plate}) no tiene ordenes de trabajo activas en este momento.`
+            : "No se encontraron ordenes de trabajo activas."}
+          action={<Link href="/" className="text-sm font-medium text-brand-primary hover:underline">Nueva busqueda</Link>}
+        />
+      </div>
+    );
+  }
+
+  if (!order) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-12">
         <EmptyState
@@ -84,13 +112,12 @@ function LookupContent() {
     );
   }
 
-  const order = vehicle.currentOrder;
   const currentStatus = order.status as OrderStatus;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
       <Link href="/" className="mb-6 inline-block text-sm text-blue-600 hover:text-blue-800">
-        &larr; Nueva búsqueda
+        &larr; Nueva busqueda
       </Link>
 
       <Card>
@@ -99,7 +126,8 @@ function LookupContent() {
             <div>
               <h1 className="text-xl font-bold text-gray-900">{vehicle.plate}</h1>
               <p className="text-sm text-gray-500">
-                {vehicle.brand} {vehicle.model} {vehicle.year} &middot; {vehicle.color}
+                {vehicle.brand} {vehicle.model} {vehicle.year}
+                {vehicle.color && <> &middot; {vehicle.color}</>}
               </p>
             </div>
             <OrderStatusBadge status={currentStatus} />
@@ -108,7 +136,7 @@ function LookupContent() {
 
         <CardContent className="space-y-6">
           <div className="rounded-lg bg-gray-50 p-4">
-            <p className="text-sm font-medium text-gray-500">OT #{order.orderNumber}</p>
+            <p className="text-sm font-medium text-gray-500">OT #{order.number}</p>
             <p className="mt-1 text-sm text-gray-700">{order.description}</p>
             {order.estimatedDelivery && (
               <p className="mt-2 text-xs text-gray-500">

@@ -9,37 +9,39 @@ export type OrderStatus =
   | "CANCELLED";
 
 export interface StatusHistoryEntry {
-  id: string;
   status: OrderStatus;
-  comment: string | null;
   timestamp: string;
+  comment?: string | null;
 }
 
-export interface VehicleLookupResult {
-  id: string;
+export interface VehicleInfo {
   plate: string;
   brand: string;
   model: string;
   year: number;
-  color: string;
-  currentOrder: OrderLookupResult | null;
+  color: string | null;
 }
 
-export interface OrderLookupResult {
+export interface OrderInfo {
   id: string;
-  orderNumber: number;
+  number: string;
   status: OrderStatus;
   description: string;
+  receivedAt: string;
   estimatedDelivery: string | null;
-  createdAt: string;
+  deliveredAt: string | null;
   statusHistory: StatusHistoryEntry[];
 }
 
 export interface LookupResponse {
-  vehicle: VehicleLookupResult;
+  found: boolean;
+  vehicle?: VehicleInfo;
+  order?: OrderInfo | null;
+  activeOrder?: null;
+  message?: string;
 }
 
 export interface OrderDetailResponse {
-  order: OrderLookupResult;
-  vehicle: VehicleLookupResult;
+  order: OrderInfo;
+  vehicle: VehicleInfo;
 }

@@ -71,7 +71,7 @@ export default function StatusPage() {
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-xl font-bold text-gray-900">
-                Orden de Trabajo #{order.orderNumber}
+                Orden de Trabajo #{(order as any).orderNumber ?? (order as any).number}
               </h1>
               <p className="mt-1 text-sm text-gray-500">
                 Vehículo: {vehicle.brand} {vehicle.model} {vehicle.year} &middot; Placa {vehicle.plate}
@@ -138,8 +138,8 @@ export default function StatusPage() {
             <div className="relative">
               <div className="absolute left-3 top-0 h-full w-px bg-gray-200" />
               <ul className="space-y-3">
-                {sortedHistory.map((entry: StatusHistoryEntry) => (
-                  <li key={entry.id} className="relative flex gap-4 pl-8">
+                {sortedHistory.map((entry: StatusHistoryEntry, idx: number) => (
+                  <li key={idx} className="relative flex gap-4 pl-8">
                     <span
                       className={`absolute left-0 top-1.5 h-3 w-3 rounded-full border-2 ${
                         entry.status === "CANCELLED"

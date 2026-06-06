@@ -16,6 +16,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/lookup/page.js"
     ],
+    "/status/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/status/[id]/page.js"
+    ],
     "/_not-found/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",

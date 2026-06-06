@@ -9,9 +9,9 @@ import Link from "next/link";
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
   RECEIVED: "Recibido",
-  IN_DIAGNOSIS: "En Diagnóstico",
+  IN_DIAGNOSIS: "En Diagnostico",
   BUDGETED: "Cotizado",
-  IN_PROGRESS: "En Reparación",
+  IN_PROGRESS: "En Reparacion",
   IN_REVIEW: "Control de Calidad",
   READY: "Listo para Recoger",
   DELIVERED: "Entregado",
@@ -29,7 +29,7 @@ export default function TrackOrderPage() {
       <div className="mx-auto max-w-2xl px-4 py-12">
         <EmptyState
           title="Orden no especificada"
-          description="No se proporcionó un código de orden de trabajo."
+          description="No se proporciono un codigo de orden de trabajo."
           action={<Link href="/" className="text-sm font-medium text-brand-primary hover:underline">Volver al inicio</Link>}
         />
       </div>
@@ -48,29 +48,45 @@ export default function TrackOrderPage() {
     return (
       <div className="mx-auto max-w-2xl px-4 py-12">
         <EmptyState
-          title="No encontrado"
-          description={`No se encontraron resultados para "${orderNumber}". Verifica el código e intenta nuevamente.`}
-          action={<Link href="/" className="text-sm font-medium text-brand-primary hover:underline">Nueva búsqueda</Link>}
-        />
-      </div>
-    );
-  }
-
-  const { vehicle } = query.data;
-
-  if (!vehicle.currentOrder) {
-    return (
-      <div className="mx-auto max-w-2xl px-4 py-12">
-        <EmptyState
-          title="Sin órdenes activas"
-          description={`El vehículo ${vehicle.brand} ${vehicle.model} (${vehicle.plate}) no tiene órdenes de trabajo activas en este momento.`}
+          title="Error"
+          description="Ocurrio un error al consultar. Verifica tu conexion e intenta nuevamente."
           action={<Link href="/" className="text-sm font-medium text-brand-primary hover:underline">Volver al inicio</Link>}
         />
       </div>
     );
   }
 
-  const order = vehicle.currentOrder;
+  const data = query.data;
+
+  if (!data?.found) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-12">
+        <EmptyState
+          title="No encontrado"
+          description={data?.message ?? `No se encontraron resultados para "${orderNumber}".`}
+          action={<Link href="/" className="text-sm font-medium text-brand-primary hover:underline">Nueva busqueda</Link>}
+        />
+      </div>
+    );
+  }
+
+  const vehicle = data.vehicle;
+  const order = data.order ?? null;
+
+  if (!vehicle || !order) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-12">
+        <EmptyState
+          title="Sin ordenes activas"
+          description={vehicle
+            ? `El vehiculo ${vehicle.brand} ${vehicle.model} (${vehicle.plate}) no tiene ordenes de trabajo activas.`
+            : "No se encontro informacion del vehiculo."}
+          action={<Link href="/" className="text-sm font-medium text-brand-primary hover:underline">Volver al inicio</Link>}
+        />
+      </div>
+    );
+  }
+
   const currentStatus = order.status as OrderStatus;
 
   return (
@@ -84,9 +100,7 @@ export default function TrackOrderPage() {
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-xl font-bold text-gray-900">Seguimiento de Orden</h1>
-              <p className="text-sm text-gray-500">
-                Código: {orderNumber}
-              </p>
+              <p className="text-sm text-gray-500">Codigo: {orderNumber}</p>
             </div>
             <OrderStatusBadge status={currentStatus} />
           </div>
@@ -94,18 +108,17 @@ export default function TrackOrderPage() {
 
         <CardContent className="space-y-6">
           <div className="rounded-lg bg-gray-50 p-4">
-            <h2 className="text-sm font-semibold text-gray-600 mb-2">Información del Vehículo</h2>
+            <h2 className="text-sm font-semibold text-gray-600 mb-2">Informacion del Vehiculo</h2>
             <p className="text-base font-medium text-gray-900">{vehicle.plate}</p>
             <p className="text-sm text-gray-500">
-              {vehicle.brand} {vehicle.model} {vehicle.year} &middot; {vehicle.color}
+              {vehicle.brand} {vehicle.model} {vehicle.year}
+              {vehicle.color && <> &middot; {vehicle.color}</>}
             </p>
           </div>
 
           <div className="rounded-lg bg-gray-50 p-4">
             <h2 className="text-sm font-semibold text-gray-600 mb-2">Estado Actual</h2>
-            <p className="text-base font-medium text-gray-900">
-              {STATUS_LABEL[currentStatus]}
-            </p>
+            <p className="text-base font-medium text-gray-900">{STATUS_LABEL[currentStatus]}</p>
             <p className="mt-1 text-sm text-gray-700">{order.description}</p>
             {order.estimatedDelivery && (
               <p className="mt-2 text-xs text-gray-500">
