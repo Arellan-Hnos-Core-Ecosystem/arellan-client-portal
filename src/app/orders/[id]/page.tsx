@@ -21,8 +21,7 @@ export default function ClientOrderDetailPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem("arellan-client-token")
-    if (!token || !params.id) { router.push("/login"); return }
+    if (!params.id) return
 
     getClientOrderDetail(params.id)
       .then(data => {

@@ -12,38 +12,47 @@ interface Vehicle {
 interface OrderInfo {
   id: string; number: string; status: OrderStatus; description: string; vehiclePlate: string; createdAt: string
 }
+interface DisplayUser {
+  name: string; id: string
+}
+
+function readDisplayCookie(): DisplayUser | null {
+  if (typeof document === "undefined") return null
+  const raw = document.cookie
+    .split(";")
+    .find((c) => c.trim().startsWith("arellan-client-display="))
+  if (!raw) return null
+  try {
+    return JSON.parse(decodeURIComponent(raw.split("=").slice(1).join("="))) as DisplayUser
+  } catch {
+    return null
+  }
+}
 
 export default function ClientDashboardPage() {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<DisplayUser | null>(null)
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [orders, setOrders] = useState<OrderInfo[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" })
+    router.push("/login")
+  }
+
   useEffect(() => {
-    const stored = localStorage.getItem("arellan-client-user")
-    const token = localStorage.getItem("arellan-client-token")
-    if (!stored || !token) {
-      router.push("/login")
-      return
-    }
-    setUser(JSON.parse(stored))
+    setUser(readDisplayCookie())
 
     Promise.all([getClientVehicles(), getClientOrders(10)])
       .then(([vehData, ordData]) => {
-        setVehicles(Array.isArray(vehData) ? vehData : vehData.data || [])
-        setOrders(Array.isArray(ordData) ? ordData : ordData.data || [])
+        setVehicles(Array.isArray(vehData) ? vehData : (vehData as { data: Vehicle[] }).data ?? [])
+        setOrders(Array.isArray(ordData) ? ordData : (ordData as { data: OrderInfo[] }).data ?? [])
       })
-      .catch((err) => { console.error("[client-portal] Error:", err.message); setError(err.message) })
+      .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
-
-  const handleLogout = () => {
-    localStorage.removeItem("arellan-client-token")
-    localStorage.removeItem("arellan-client-user")
-    router.push("/login")
-  }
 
   if (loading) return <div className="flex min-h-screen items-center justify-center"><Spinner size="lg" /></div>
 
@@ -56,6 +65,8 @@ export default function ClientDashboardPage() {
         </div>
         <Button variant="ghost" onClick={handleLogout}>Salir</Button>
       </div>
+
+      {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
 
       <div className="space-y-6">
         <Card>

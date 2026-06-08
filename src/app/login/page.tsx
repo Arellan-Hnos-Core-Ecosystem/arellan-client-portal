@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button, Input, Card, CardHeader, CardContent, CardFooter, Alert, Spinner } from "@arellan-hnos-core-ecosystem/ui"
-import { loginClient } from "@/lib/api"
 
 export default function ClientLoginPage() {
   const router = useRouter()
@@ -18,21 +17,24 @@ export default function ClientLoginPage() {
     setError("")
 
     try {
-      const data = await loginClient(email, password)
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      })
 
-      if (data.user.role !== "CLIENT") {
-        setError("Este portal es solo para clientes. Los empleados deben usar el panel de administración.")
-        setLoading(false)
+      const data = await res.json() as { message?: string }
+
+      if (!res.ok) {
+        setError(data.message ?? "Error al iniciar sesion. Verifique sus credenciales.")
         return
       }
 
-      localStorage.setItem("arellan-client-token", data.accessToken)
-      localStorage.setItem("arellan-client-user", JSON.stringify(data.user))
-
+      // HttpOnly cookie set by BFF route — no token in JS
       router.push("/dashboard")
-    } catch (err: any) {
-      const msg = err.message || "Error al iniciar sesión. Verifique sus credenciales."
-      setError(msg)
+    } catch {
+      setError("Error de conexion con el servidor.")
     } finally {
       setLoading(false)
     }

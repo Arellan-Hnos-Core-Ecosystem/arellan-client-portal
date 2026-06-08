@@ -16,9 +16,6 @@ export default function ClientOrdersPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem("arellan-client-token")
-    if (!token) { router.push("/login"); return }
-
     getClientOrders(50)
       .then(data => setOrders(Array.isArray(data) ? data : data.data || []))
       .catch((err) => { console.error("[client-portal] Error:", err.message) })

@@ -54,13 +54,14 @@ El portal muestra el estado de la OT en tiempo real:
 
 | Estado | Descripción |
 |--------|-------------|
-| `RECIBIDO` | Vehículo ingresado al taller, pendiente de diagnóstico |
-| `EN_DIAGNOSTICO` | Mecánico evaluando el problema |
-| `COTIZACION_ENVIADA` | Cotización disponible para aprobación del cliente |
-| `EN_REPARACION` | Trabajo en curso |
-| `CONTROL_DE_CALIDAD` | Revisión final antes de entrega |
-| `LISTO_PARA_RECOGER` | Vehículo listo, se puede pasar a recoger |
-| `ENTREGADO` | Vehículo entregado al cliente |
+| `RECEIVED` | Vehículo ingresado al taller, pendiente de diagnóstico |
+| `IN_DIAGNOSIS` | Mecánico evaluando el problema |
+| `BUDGETED` | Cotización disponible para aprobación del cliente |
+| `IN_PROGRESS` | Trabajo en curso |
+| `IN_REVIEW` | Revisión final antes de entrega |
+| `READY` | Vehículo listo, se puede pasar a recoger |
+| `DELIVERED` | Vehículo entregado al cliente |
+| `CANCELLED` | Orden cancelada |
 
 ## Funcionalidades MVP
 
@@ -95,7 +96,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 
 ```bash
 npm install
-npm run dev          # localhost:3003
+npm run dev          # localhost:3004
 npm run build
 npm run start
 npm run test

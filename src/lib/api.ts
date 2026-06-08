@@ -1,15 +1,13 @@
 import axios from "axios";
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api/v1";
-
-const api = axios.create({
-  baseURL: BASE_URL,
+// Public-only API client — for anonymous lookups (no auth required)
+const publicApi = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api/v1",
   timeout: 10000,
   headers: { "Content-Type": "application/json" },
 });
 
-api.interceptors.response.use(
+publicApi.interceptors.response.use(
   (response) => response,
   (error) => {
     const message =
@@ -17,58 +15,51 @@ api.interceptors.response.use(
       error.response?.data?.error ??
       "Error de conexion con el servidor";
     return Promise.reject(new Error(message));
-  }
+  },
 );
 
-export function getAuthHeaders(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  const token = localStorage.getItem("accessToken");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+// ── Public endpoints (no authentication) ──────────────────────────────────────
 
 export async function lookupByPlate(plate: string) {
-  const { data } = await api.get(`/public/orders/lookup`, {
-    params: { plate },
-  });
+  const { data } = await publicApi.get(`/public/orders/lookup`, { params: { plate } });
   return data;
 }
 
 export async function lookupByOT(otCode: string) {
-  const { data } = await api.get(`/public/orders/lookup`, {
-    params: { ot: otCode },
-  });
+  const { data } = await publicApi.get(`/public/orders/lookup`, { params: { ot: otCode } });
   return data;
 }
 
 export async function getOrderStatus(orderId: string) {
-  const { data } = await api.get(`/public/orders/${orderId}`);
+  const { data } = await publicApi.get(`/public/orders/${orderId}`);
   return data;
 }
 
-export async function loginClient(email: string, password: string) {
-  const { data } = await api.post("/auth/login", { email, password });
-  return data;
+// ── Authenticated endpoints — routed through Next.js BFF (cookie handled server-side) ──
+
+async function bffFetch<T = any>(path: string): Promise<T> {
+  const res = await fetch(path, { credentials: "include", cache: "no-store" });
+  if (res.status === 401) {
+    if (typeof window !== "undefined") window.location.replace("/login");
+    throw new Error("Sesion expirada");
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { message?: string };
+    throw new Error(err.message ?? "Error del servidor");
+  }
+  return res.json() as Promise<T>;
 }
 
 export async function getClientVehicles() {
-  const { data } = await api.get("/vehicles", {
-    headers: getAuthHeaders(),
-  });
-  return data;
+  return bffFetch("/api/vehicles");
 }
 
 export async function getClientOrders(limit = 50) {
-  const { data } = await api.get(`/orders?limit=${limit}`, {
-    headers: getAuthHeaders(),
-  });
-  return data;
+  return bffFetch(`/api/orders?limit=${limit}`);
 }
 
 export async function getClientOrderDetail(orderId: string) {
-  const { data } = await api.get(`/orders/${orderId}`, {
-    headers: getAuthHeaders(),
-  });
-  return data;
+  return bffFetch(`/api/orders/${encodeURIComponent(orderId)}`);
 }
 
-export default api;
+export default publicApi;
