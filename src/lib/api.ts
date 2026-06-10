@@ -62,4 +62,38 @@ export async function getClientOrderDetail(orderId: string) {
   return bffFetch(`/api/orders/${encodeURIComponent(orderId)}`);
 }
 
+export async function approveOrderQuote(orderId: string, clientSignature: string) {
+  const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}/quote/approve`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ clientSignature }),
+    cache: "no-store",
+  });
+  if (res.status === 401) {
+    if (typeof window !== "undefined") window.location.replace("/login");
+    throw new Error("Sesion expirada");
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { message?: string };
+    throw new Error(err.message ?? "Error al aprobar la cotización");
+  }
+  return res.json();
+}
+
+export async function rejectOrderQuote(orderId: string, reason: string) {
+  const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}/quote/reject`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reason }),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { message?: string };
+    throw new Error(err.message ?? "Error al rechazar la cotización");
+  }
+  return res.json();
+}
+
 export default publicApi;
