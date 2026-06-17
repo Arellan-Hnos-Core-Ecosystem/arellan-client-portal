@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  output: "standalone",
   transpilePackages: ["@arellan-hnos-core-ecosystem/ui"],
   images: {
     remotePatterns: [

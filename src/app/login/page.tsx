@@ -57,11 +57,11 @@ export default function ClientLoginPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="client-email" className="block text-sm font-medium text-gray-700 mb-1">Correo electronico</label>
-                <Input id="client-email" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="cliente@email.com" required />
+                <Input id="client-email" name="email" type="email" value={email} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)} placeholder="cliente@email.com" required />
               </div>
               <div>
                 <label htmlFor="client-password" className="block text-sm font-medium text-gray-700 mb-1">Contrasena</label>
-                <Input id="client-password" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="********" required />
+                <Input id="client-password" name="password" type="password" value={password} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)} placeholder="********" required />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? <Spinner size="sm" /> : "Ingresar"}

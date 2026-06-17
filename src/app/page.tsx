@@ -70,7 +70,7 @@ export default function HomePage() {
                   type="text"
                   placeholder={searchType === "plate" ? "Ej: ABC-123" : "Ej: OT-20240001"}
                   value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchValue(e.target.value)}
                   className="w-full"
                   autoFocus
                 />
